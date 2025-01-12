@@ -1,1 +1,1 @@
-# WCM BDS22 Biostatistics II Final Project
+# Biostats II Final Project
