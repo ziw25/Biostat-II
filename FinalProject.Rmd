@@ -1,0 +1,359 @@
+---
+title: "Biostatistics 2 - Final Project"
+author: "Ziwen Zhang"
+date: "2023-04-13"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    fig_height: 6.5
+    fig_width: 9.5
+---
+
+# Question 1
+
+### Load dataset and libraries
+```{r}
+mydata <- read.csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
+```
+
+## (a) 
+a)	Run a multiple linear regression to predict gpa use all covariates.
+```{r}
+# Fit a multiple linear regression
+model <- lm(gpa ~ ., data = mydata)
+
+# View the model summary
+summary(model)
+
+# Extract the coefficients for each variable
+coef(model)
+```
+
+## (b)
+b)	What is the interpretation of your regression coefficients?
+
+**Answer: **
+
+The intercept coefficient represents the expected gpa value when all other predictor variables are equal to zero. In this case, it is 2.638014826, which means that if a student had a GRE score of zero, a prestige rank of 0, and was not admitted, the expected GPA would be 2.638014826.
+
+The coefficient for admit represents the expected change in gpa for a one-unit increase in the admit variable, holding all other variables constant. In this case, the coefficient is 0.093591537, which means that for a student from not being admitted to being admitted, the expected GPA would increase 0.093591537, holding other variables constant.
+
+The coefficient for gre represents the expected change in gpa for a one-unit increase in the gre variable, holding all other variables constant. In this case, the coefficient is 0.001202571, which means that for every one point increase in the gre score, the expected gpa would increase 0.001202571, holding other variables constant.
+
+The coefficient for rank represents the expected change in gpa for a one-unit increase in the rank variable, holding all other variables constant. In this case, the coefficient is 0.006204686, which means that for every one unit increase in the prestige rank (i.e., going from a less prestigious to a more prestigious undergraduate institution), the expected gpa would increases 0.006204686, holding other variables constant.
+
+## (c)
+c)	Comment on the model fit from residual plots and coefficient of determination/AIC/BIC
+```{r}
+# Generate residual plots
+par(mfrow = c(2,2))
+plot(model)
+```
+
+**Comments: **
+
+The residuals vs. fitted values plot can help us assess whether there are any patterns or non-linearity in the residuals. Ideally, we want to see a random scatter of points around the horizontal line at zero. In this case, the plot appears to show a slightly non-linear pattern, with the points forming a "U" shape. This suggests that the relationship between the predictors and the response may not be perfectly linear and that there may be some omitted variables or non-linearities that we have not accounted for in the model.
+
+The normal Q-Q plot can help us assess whether the residuals are normally distributed. Ideally, we want to see the points follow a diagonal line. In this case, the points appear to deviate from the line at the upper tails, suggesting that the residuals may not be perfectly normally distributed.
+
+The residuals vs. leverage plot can help us identify influential observations or outliers. Ideally, we want to see a random scatter of points around the horizontal line at zero. In this case, there are a few observations with high leverage and large residuals, which suggests that they may be influential in the model.
+
+The Cook's distance plot can help us identify influential observations that have a large impact on the model. Ideally, we want to see all points fall within the cutoff line of 0.5. In this case, there are a few observations with high Cook's distance, which suggests that they may be influential in the model.
+
+```{r}
+# View the model summary
+summary(model)
+```
+
+**Comments: **
+
+The coefficient of determination (R^2) is a measure of how much of the variance in the response variable is explained by the predictor variables. In this case, the adjusted R-squared value for this model is 0.1534, which means that approximately 15.34% of the variance in gpa is explained by the predictor variables in the model. This result shows that the model is not good.
+
+```{r}
+# Calculate AIC and BIC
+AIC(model)
+BIC(model)
+```
+
+**Comments: **
+
+The AIC and BIC are measures of model fit that take into account both the goodness of fit and the complexity of the model. In general, lower AIC and BIC values indicate better model fit. The AIC value for this model is 301.624, and the BIC value is 321.5813. This result shows that the model is relatively not good.
+
+
+## (d)
+d)	For a new observation, admitted, GRE 700, rank 3, what is the predicted gpa? What are the confidence intervals for the predicted mean and the new observation separately?
+```{r}
+# Create new observation
+newdata <- data.frame(admit = 1, gre = 700, rank = 3)
+
+# Predict gpa for new observation
+pred <- predict(model, newdata)
+
+# View predicted gpa
+paste("The predicted gpa is: ", round(pred, 3)) 
+```
+For a new observation, admitted, GRE 700, rank 3, the predicted gpa is 3.592.
+
+```{r}
+# Predict confidence intervals for mean and new observation
+CI_mean <- predict(model, newdata, interval = "confidence")
+CI_newobs <- predict(model, newdata, interval = "prediction")
+
+# View confidence intervals
+paste("The confidence intervals for the predicted mean is: ")
+CI_mean
+paste("The confidence intervals for the predicted mean is: ")
+CI_newobs
+```
+
+
+## (e)
+e)	If we drop rank as a predictor, compare this model with the previous one using F test?
+```{r}
+# Fit model without rank predictor
+model_no_rank <- lm(gpa ~ admit + gre, data = mydata)
+
+# Compare models using ANOVA F-test
+anova(model_no_rank, model)
+```
+Since the p-value is 0.7467 > 0.05, there is no evidence to reject the null hypothesis that the reduced model performs differently from the full model. Therefore, we can conclude that the rank predictor does not significantly impact the model fit, and dropping it would not result in a different model.
+
+
+## (f)
+f)	Consider the model with an interaction term of admission and rank. What is the interpretation of your regression model now?
+```{r}
+# fit the model with an interaction
+model_interact <- lm(gpa ~ admit + gre + rank + admit * rank, data = mydata)
+
+# View the model
+summary(model_interact)
+```
+
+**Interpretation: **
+
+The intercept coefficient represents the expected gpa value when all other predictor variables are equal to zero. In this case, it is 2.6249870, which means that if a student had a GRE score of zero, a prestige rank of 0, and was not admitted, the expected GPA would be 2.6249870.
+
+The coefficient for admit represents the expected change in gpa for a one-unit increase in the admit variable, holding all other variables constant. In this case, the coefficient is 0.1291334, which means that for a student from not being admitted to being admitted, the expected GPA would increase 0.1291334, holding other variables constant. However, the large p-value (0.209) indicates this variable is not significantly impact for predicting gpa.
+
+The coefficient for gre represents the expected change in gpa for a one-unit increase in the gre variable, holding all other variables constant. In this case, the coefficient is 0.0012028, which means that for every one point increase in the gre score, the expected gpa would increase 0.0012028, holding other variables constant.
+
+The coefficient for rank represents the expected change in gpa for a one-unit increase in the rank variable, holding all other variables constant. In this case, the coefficient is 0.0110937, which means that for every one unit increase in the prestige rank (i.e., going from a less prestigious to a more prestigious undergraduate institution), the expected gpa would increases 0.0110937, holding other variables constant. However, the large p-value (0.209) indicates this variable is not significantly impact for predicting gpa. However, the large p-value (0.663) indicates this variable is not significantly impact for predicting gpa.
+
+The interaction term can be interpreted as the change in the effect of admit on gpa for a one-unit increase in rank, holding all other variables constant. In this case, the coefficient is -0.0154208, which means that for every one unit increase in rank (i.e., going from a less prestigious to a more prestigious undergraduate institution), the effect of admit on gpa would decrease 0.0154208, holding all other variables constant. However, the large p-value (0.209) indicates this variable is not significantly impact for predicting gpa. However, the large p-value (0.708) indicates this variable is not significantly impact for predicting gpa.
+
+
+# Question 2
+
+### load library
+```{r, warning=FALSE}
+library(ResourceSelection)
+library(car)
+library(pROC)
+```
+
+## (a)
+a) Run a logistic regression to predict the admission use all covariates. What is the interpretation of your regression coefficients?
+```{r}
+# Fit a logistic regression model
+model_glm <- glm(admit ~ gre + gpa + rank, data = mydata, family = binomial())
+
+# View the model summary
+summary(model_glm)
+
+# Extract the coefficients for each variable
+coef(model_glm)
+```
+
+**Interpretation: **
+
+The estimated coefficient of intercept is -3.449548, which means the log odds for being admitted for a student when all predictors are equal to zero is -3.449548.
+
+The estimated coefficient for the predictor variables (including gre, gpa and rank) represent the change in the log-odds of admission for a one-unit increase in each predictor variable, holding all other variables constant.
+
+
+## (b)
+b) Compute residuals and conduct model diagnosis 
+```{r}
+# Compute residuals
+residuals <- resid(model_glm, type = "deviance")
+head(residuals)
+
+# Goodness-of-fit test
+hoslem.test(mydata$admit, fitted(model_glm), g=10)
+```
+since the p-value is 0.9199 > 0.05, there is no evidence to reject the null hypothesis that the observed frequencies of the outcome variable within each group are not significantly different from the expected frequencies based on the model's predictions. Thus, this model is relatively good.
+
+```{r}
+# Generate residual plots
+par(mfrow = c(2,2))
+plot(model_glm)
+```
+
+**Comment: **
+From the residual analysis, we can see a pattern shown on the residuals vs fitted plot and there is a deviation at the tails on the qq-plot, which indicates that there might be an inappropriate link function used for this logistic regression model. In addition, there are a few points exceeding the Cook's distance, indicating that they are influential points in the data set.
+
+```{r}
+# vif test for colinearity
+vif(model_glm)
+```
+From the VIF score, we can see that there is no obvious colinearity among the predictors.
+
+
+## (c)
+c) Plot a ROC curve to evaluate your model prediction, calculate the area under the curve
+```{r}
+# Get predicted probabilities
+probs <- predict(model_glm, type = "response")
+
+# Plot ROC curve
+roc <- roc(mydata$admit, probs)
+
+plot(roc, main="ROC Curve")
+# Add reference line
+abline(0,1,col ="gray",lty = 2)
+
+# Calculate AUC
+auc(roc)
+```
+
+**Comment: ** 
+
+The Area under the Curve is 0.6921, which indicates a relatively acceptable prediction.
+
+## (d)
+d) Remove rank as a predictor and compare two models using 1. AIC 2. Analysis of deviance
+```{r}
+# Fit model with rank removed
+model_reduced <- glm(admit ~ gre + gpa, data = mydata, family = "binomial")
+
+# Compare AICs
+AIC(model_glm)
+AIC(model_reduced)
+
+# Perform analysis of deviance
+anova(model_glm, model_reduced, test = "Chi")
+```
+
+**Comment: **
+
+From the analysis of deviance table, we can see that p-value is smaller than the significance level, indicating that there is a significant difference between the performances of full and reduced models.
+
+AIC for full model is 467.4418 and AIC for reduced model is 486.344. This result shows that the full model with rank as a predictor is a superior model.
+
+# Question 3
+
+### load library and dataset
+```{r}
+library(KMsurv)
+library(survival)
+data(psych)
+```
+
+## (a)
+Generate lifetime (only need to show the head) and km curve
+```{r}
+# Create a survival object (lifetime)
+surv_obj <- with(psych, Surv(psych$time, psych$death))
+
+# Compute the life table
+life_table <- survfit(surv_obj ~ 1, conf.type = "none")
+
+# Print the life table
+print(life_table)
+
+# Generate a Kaplan-Meier curve
+km_fit <- survfit(surv_obj ~ 1)
+
+# Plot the Kaplan-Meier curve
+plot(km_fit, xlab = "Time (days)", ylab = "Survival Probability", main = "Kaplan-Meier Curve for Psych Dataset")
+```
+
+## (b)
+b) plot km surv by sex, use logrank test to compare two groups
+```{r}
+# Create separate survival objects for males and females
+surv_male <- surv_obj[psych$sex == 1]
+surv_female <- surv_obj[psych$sex == 2]
+
+# Generate Kaplan-Meier curves for males and females
+km_male <- survfit(surv_male ~ 1, conf.type = "none")
+km_female <- survfit(surv_female ~ 1, conf.type = "none")
+
+# Plot the Kaplan-Meier curves by sex
+plot(km_male, col = "blue", xlab = "Time (days)", ylab = "Survival Probability", main = "KM Curves by Sex")
+lines(km_female, col = "red")
+
+# Perform the log-rank test
+logrank_test <- survdiff(surv_obj ~ psych$sex)
+print(logrank_test)
+```
+
+From the result of the log-rank test, the p-value is 0.2 > 0.05, which indicates that there is no evidence to reject the null hypothesis and thus there is not a significant difference in survival between males and females. The KM curves show that males have a higher probability of survival than females.
+
+## (c)
+c) Run a parametric regression model with sex and age as predictors
+```{r}
+# Fit a Weibull regression model with sex and age as predictors
+weibull_model <- survreg(surv_obj ~ psych$sex + psych$age, dist = "weibull")
+
+# Print the model summary
+summary(weibull_model)
+```
+
+## (d)
+d) Run a Cox model with both predictors. What is the interpretation of your regression coefficients? Comment on the model fit.
+```{r}
+# Fit a Cox proportional hazards model with sex and age as predictors
+cox_model <- coxph(surv_obj ~ psych$sex + psych$age, data = psych)
+
+# Print the model summary
+summary(cox_model)
+```
+
+**Interpretation: **
+
+The coefficient for sex is -0.52374, which means that males have a hazard ratio of exp(coef) = 0.5923 times that of females, after controlling for age. In other words, the hazard of failure for males is 41% lower than that of females, after controlling for age.
+
+The coefficient for age is 0.20753, which means that for each one-unit increase in age, the hazard ratio increases by exp(coef) = 1.2306, after controlling for sex. This means that older age is associated with a slightly higher hazard of failure, after controlling for sex.
+
+However, the output shows that age is a significant predictors of survival whereas sex is not significant according to p-values.
+
+**Comment on model fit: **
+The Concordance statistic (C-index) of the model is 0.816, indicating a relatively good predictive accuracy since C-index of 0.5 indicates no predictive accuracy and 1 indicates perfect predictive accuracy. This means that the model can correctly rank order pairs of individuals with respect to their survival times about two-thirds of the time on average.
+
+The likelihood ratio test, Wald test, and score (logrank) test all suggest that the model is significant since all p-values are obviously smaller than the significance level 0.05. This indicates that the Cox model fulfill the assumptions that the hazard ratios are constant over time (proportional hazards assumptions) and that the relationship between the predictors and the hazard of failure is linear on the log hazard scale (linearity assumption).
+
+## (e)
+e) remove sex as a predictor, compare with the previous Cox model using analysis of deviance
+```{r}
+# Fit Cox model with age only
+cox_reduced <- coxph(Surv(time, death) ~ psych$age, data = psych)
+
+# Perform analysis of deviance
+dev_reduced <- cox_reduced$loglik[2]
+dev_full <- summary(cox_model)$loglik[2]
+D <- 2*(dev_full - dev_reduced)
+p_value <- 1 - pchisq(D, df = 1)
+
+paste("Deviance of the full Cox model is: ", round(dev_full,3))
+paste("Deviance of the reduced Cox model is: ", round(dev_reduced,3))
+paste("Difference of Deviance is: ", round(D, 3))
+paste ("P-value is: ", round(p_value, 3))
+```
+
+**Comment: **
+
+The deviance of the full model with sex and age is -27.5, and the deviance of the reduced model with age only is -27.251. The difference of deviance is 0.498, which has a p-value of 0.48 based on a chi-square distribution with degree of freedom 1. This indicates that there is no significant difference between the full model and the reduced model, and sex is not a significant predictor of survival after controlling for age in this dataset, and thus can be retained in the model.
+
+## (f)
+f) run a stratified Cox model with sex as stratification variable
+```{r}
+# Fit stratified Cox model
+cox_strat <- coxph(Surv(time, death) ~ psych$age + strata(psych$sex), data = psych)
+
+# Print summary of the model
+summary(cox_strat)
+```
+
